@@ -122,6 +122,7 @@
 ## 每日/每周执行建议
 
 - **每天**：3‑5小时有效投入，写科研日志记录当天做了什么、遇到什么Bug、怎么解决的（ISEF非常看重过程记录）
+- **Git 协作纪律**（两台电脑）：开工前 `git pull --rebase`，收工前 commit+push；英文 commit；A 必须在自己电脑设 `git config --local user.name/email`（否则贡献全记在 B 头上）；push 被拒先 pull --rebase；禁止 U 盘/微信传文件；网络卡死配 `git config --local http.proxy`
 - **每周日**：回顾本周进度，对照清单更新状态，调整下周计划
 - **每月末**：做一次里程碑评估，确认是否需要启动风险预案
 

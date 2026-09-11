@@ -1,4 +1,4 @@
-# 同学 A 任务清单（数学/算法主线）
+# 同学 A 任务清单（数学/算法主线）    用 Git 时要设自己的身份！！！！！！！！！！！！！
 
 > 版本 v1.0（2026-09-11，同学 B 整理）｜ 配套阅读：`docs/memo_A_certified_error_bound.md`（你的核心技术备忘）
 > 原则：主线优先、支线挂铁律、每周日与 B 互相讲解 15 分钟
@@ -19,6 +19,31 @@
 **你的两个插件挂载点**（架构文档 §3.5）：
 - `ErrorMonitor`：求解循环每步回调，`src/rom/reduced.py` 已替你算好基空间外残差分量 $(I-VV^T)r$
 - `AdaptiveSampler`：输入快照库+基，输出下一批采样参数点
+
+---
+
+## 0.5 两台电脑协作（一次性设置 + 每日纪律）
+
+> 我们在两台不同的电脑上，GitHub 私有仓库是唯一中转站，**禁止 U 盘/微信传文件**。
+
+**一次性设置（你的电脑）**：
+1. 装 Git、注册 GitHub，让 B 把你加为仓库协作者
+2. `git clone <仓库地址>`（地址问 B）
+3. **必须设自己的身份**（不设的话你的 commit 全算在 B 头上，ISEF 查贡献记录说不清）：
+   ```bash
+   git config --local user.name "你的名字"
+   git config --local user.email "你的邮箱"
+   ```
+4. 验证环境：`python -m pytest tests/ -q` 全绿
+5. 网络卡死时配代理（问 B 要当前可用端口）：`git config --local http.proxy http://127.0.0.1:端口`
+
+**每日纪律（两条）**：
+```bash
+git pull --rebase   # 开工前必做：先拿对方最新代码
+git add -A && git commit -m "英文写清做了什么" && git push   # 收工前必做
+```
+- push 被拒 = B 先推了新东西 → `git pull --rebase` 再 push，99% 自动合并
+- 两人都在 master 小步快跑，不搞复杂分支
 
 ---
 
