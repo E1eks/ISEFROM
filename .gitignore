@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# 数据产物（快照库体量大了以后迁移 HDF5，不进 Git）
+*.npy
+*.npz
+*.h5
+
+# 图片输出（论文用图另行归档）
+*.png
+
+# 系统
+.DS_Store
+Thumbs.db
