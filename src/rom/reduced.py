@@ -132,3 +132,14 @@ class ROMSolver:
 
         snapshots = model.mean[:, None] + model.V @ a
         return ROMResult(t=t, a=a, snapshots=snapshots, alerts=alerts)
+
+
+def solve_steady(model: ReducedModel, params: dict) -> np.ndarray:
+    """椭圆型（稳态）降阶求解：A_r a + f_r = 0（任务 #12）。
+
+    与 ROMSolver（抛物型时间积分）并列的第二类求解路径，
+    复用同一套仿射装配——框架不区分 PDE 类型（架构文档 §2 目标 G1）。
+    """
+    A_r, f_r = model.assemble_reduced(params)
+    a = -np.linalg.solve(A_r, f_r)
+    return model.mean + model.V @ a
