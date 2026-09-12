@@ -17,3 +17,6 @@ outputs/
 # 绯荤粺
 .DS_Store
 Thumbs.db
+
+# DeepTutor 运行时数据（API key 等，严禁入库）
+data/
