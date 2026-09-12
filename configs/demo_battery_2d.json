@@ -1,0 +1,18 @@
+{
+  "case": "battery_2d",
+  "offline": {
+    "sampling": "lhs",
+    "n_samples": 4,
+    "seed": 7,
+    "ranges": {"k_cell": [1.0, 3.0], "h": [500.0, 3000.0], "q_gen": [30000.0, 120000.0]},
+    "energy_threshold": 0.999,
+    "time_subsample": 10
+  },
+  "online": {
+    "params": [
+      {"k_cell": 2.0, "h": 1500.0, "q_gen": 75000.0}
+    ],
+    "validate_against_fom": true
+  },
+  "output": {"prefix": "demo_battery_2d"}
+}

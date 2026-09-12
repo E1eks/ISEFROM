@@ -1,0 +1,17 @@
+{
+  "case": "heat_1d",
+  "offline": {
+    "sampling": "lhs",
+    "n_samples": 4,
+    "seed": 7,
+    "ranges": {"k": [1.0, 3.0], "h_right": [500.0, 3000.0]},
+    "energy_threshold": 0.999
+  },
+  "online": {
+    "params": [
+      {"k": 2.0, "h_right": 1500.0, "q_gen": 80000.0}
+    ],
+    "validate_against_fom": true
+  },
+  "output": {"prefix": "demo_heat_1d"}
+}
