@@ -121,6 +121,12 @@ class AdaptiveSampler(Protocol):
         """根据现有快照与基，建议下一批全阶采样参数点。"""
 ```
 
+> 📌 2026-10-20：认证误差界（#14）的挂载接口已冻结为
+> `CertifiedBoundFn = fn(model, params, ctx) -> BoundResult`
+> （`src/rom/estimators.py`），细则见 `docs/interface_certified_bound.md`。
+> ErrorMonitor 逐步告警（#15）仍用上面的回调协议，两者互补：一个是
+> 查询点级严格上界，一个是时间逐步的运行时告警。
+
 ---
 
 ## 4. 数据流与目录结构

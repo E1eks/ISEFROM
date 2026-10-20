@@ -13,7 +13,7 @@ ISEF 2028 ROM 项目
     E_time   ✅ 在线可算：Richardson 外推（dt 与 dt/2 双解差，一阶格式）
     E_param  ⚠️ 当前为无认证残差指示器 ||(I-VVᵀ)r||；
               认证版 Δ(μ)=||r||/β_LB 待同学 A 任务 #14 接入
-              （接口已预留：certified_bound_fn 参数）
+              （接口已冻结：src/rom/estimators.py 的 CertifiedBoundFn）
     E_aff    ✅ = 0（test_affine_matches_direct 恒等验证）
 
 权衡曲线（#26 原定义）：r vs E_proj vs 在线耗时/加速比。
@@ -24,6 +24,7 @@ from typing import Callable
 
 import numpy as np
 
+from .estimators import BoundContext, BoundResult, residual_out_trajectory
 from .pod import PODBasis
 from .reduced import ReducedModel, ROMSolver
 
@@ -62,15 +63,7 @@ def residual_indicator(model: ReducedModel, params: dict, T0: np.ndarray,
 
     注意：这不是严格上界——认证版 Δ(μ)=||r||/β_LB 待任务 #14 接入。
     """
-    norms: list[float] = []
-
-    def collect(step, a, res_out):
-        norms.append(float(np.linalg.norm(res_out)))
-        return None  # 不告警，只收集
-
-    ROMSolver(dt=dt, t_end=t_end).solve(model, params, T0,
-                                        monitor=collect, full_ops=full_ops)
-    norms = np.array(norms)
+    norms, _ = residual_out_trajectory(model, params, T0, dt, t_end, full_ops)
     return {"max": float(norms.max()), "mean": float(norms.mean()),
             "final": float(norms[-1]), "certified": False}
 
@@ -88,7 +81,8 @@ class BudgetCertificate:
     e_time: float
     param_indicator: dict
     e_aff: float = 0.0
-    certified_bound: float | None = None     # #14 接入后填
+    certified_bound: float | None = None     # 严格界（certified=True）才填
+    bound_details: dict | None = None        # BoundResult.to_dict()（含未认证占位）
     true_error: float | None = None          # 有全阶对照时填（调试用）
 
     @property
@@ -104,9 +98,10 @@ class BudgetCertificate:
             "E_aff": self.e_aff,
             "E_param_indicator (uncertified)": self.param_indicator,
             "certified_bound": self.certified_bound,
+            "bound_details": self.bound_details,
             "total_bound": self.total_bound,
             "true_error (debug)": self.true_error,
-            "note": "E_param 认证版待任务 #14；total_bound 暂不含无认证指示器",
+            "note": "E_param 认证版待任务 #14；total_bound 只计入 certified=True 的界",
         }
 
     def summary(self) -> str:
@@ -121,6 +116,9 @@ class BudgetCertificate:
         ]
         if self.certified_bound is not None:
             lines.append(f"  E_param (认证上界, #14)        : {self.certified_bound:.3e}")
+        elif self.bound_details is not None:
+            lines.append(f"  E_param (占位界 Δ̃, 未认证)      : {self.bound_details['delta']:.3e}"
+                         f"  [{self.bound_details['method']}]")
         lines.append(f"  总上界（当前已认证部分）        : {self.total_bound:.3e}")
         if self.true_error is not None:
             eta = (self.total_bound / self.true_error) if self.true_error > 0 else float("inf")
@@ -137,14 +135,25 @@ def budget_certificate(model: ReducedModel, basis: PODBasis, params: dict,
     """生成单点误差预算证书。
 
     参数:
-        certified_bound_fn: 认证误差界函数 fn(model, params) -> float，
-                            由同学 A 任务 #14 提供后接入
+        certified_bound_fn: 认证误差界函数（冻结签名见 src/rom/estimators.py），
+                            fn(model, params, ctx) -> BoundResult，
+                            由同学 A 任务 #14 提供后接入；certified=True 的
+                            delta 才计入 total_bound
         true_field: 调试用的全阶对照场（末时刻）
     """
     e_proj = projection_error(basis, model.r)
     e_time, u_rom = time_error_estimate(model, params, T0, dt, t_end)
     indicator = residual_indicator(model, params, T0, dt, t_end, full_ops)
-    cert = certified_bound_fn(model, params) if certified_bound_fn else None
+
+    cert = None
+    details = None
+    if certified_bound_fn is not None:
+        ctx = BoundContext(full_ops=full_ops, kind="time",
+                           T0=T0, dt=dt, t_end=t_end)
+        res: BoundResult = certified_bound_fn(model, params, ctx)
+        details = res.to_dict()
+        if res.certified:
+            cert = res.delta
 
     true_err = None
     if true_field is not None:
@@ -153,7 +162,8 @@ def budget_certificate(model: ReducedModel, basis: PODBasis, params: dict,
 
     return BudgetCertificate(params=params, r=model.r, e_proj=e_proj,
                              e_time=e_time, param_indicator=indicator,
-                             certified_bound=cert, true_error=true_err)
+                             certified_bound=cert, bound_details=details,
+                             true_error=true_err)
 
 
 # ----------------------------------------------------------------------

@@ -32,6 +32,14 @@ def main() -> None:
         line = f"[在线] {e['params']} → {e['rom_time_s'] * 1000:.1f} ms"
         if "rel_error" in e:
             line += f" | 误差 {e['rel_error']:.3%} | 加速比 {e['speedup']:.0f}x"
+        if "error_bound" in e:
+            b = e["error_bound"]
+            tag = "认证" if b["certified"] else "占位未认证"
+            line += f" | Δ({b['method']},{tag})={b['delta']:.3e}"
+            if "effectivity" in b:
+                line += f" η={b['effectivity']:.1f}"
+            if "warning" in b:
+                line += f" ⚠️{b['warning']}"
         print(line)
     print(f"[输出] 报告: {report['report_path']}")
 

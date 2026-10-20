@@ -1,0 +1,5 @@
+# ISEF 2028 ROM 项目依赖（两台机器 + 同学 A 各自建 venv 后 pip install -r requirements.txt）
+numpy>=2.5
+scipy>=1.18
+matplotlib>=3.11
+pytest>=9.1

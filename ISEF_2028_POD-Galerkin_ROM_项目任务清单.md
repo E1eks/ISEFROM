@@ -57,7 +57,7 @@
 
 | # | 任务 | 交付物 | 状态 |
 |---|------|--------|------|
-| 22 | 整合端到端流水线：配置文件输入→快照采集→POD‑Galerkin→误差监控→结果输出 | 完整流水线v1.0 | ◐（2026-09-12 雏形完成：`src/pipeline/runner.py`+`configs/`+CLI `examples/run_pipeline.py`，三算例注册即用；电池demo：在线23.7ms、误差2.61%、加速比36×；误差监控挂载点待#14接入） |
+| 22 | 整合端到端流水线：配置文件输入→快照采集→POD‑Galerkin→误差监控→结果输出 | 完整流水线v1.0 | ◐（2026-09-12 雏形完成：`src/pipeline/runner.py`+`configs/`+CLI `examples/run_pipeline.py`，三算例注册即用；电池demo：在线23.7ms、误差2.61%、加速比36×。**2026-10-20 误差监控挂载点接口冻结**：`src/rom/estimators.py`（CertifiedBoundFn/BoundContext/BoundResult+ESTIMATOR_REGISTRY+占位实现+spectral β 工具），配置 `error_monitor.estimator` 即用，effectivity 自动入报告；接口文档 `docs/interface_certified_bound.md`，待 A 的 #14 注册 "scm" 即插即用） |
 | 23 | 开源工程化：README教程、三套示例脚本（含电池热管理完整示例）、单元测试；**按JOSS投稿标准运营**（英文commit、issue模板、社区发布帖） | GitHub仓库（可公开）+JOSS投稿 | ☐ |
 | 24 | 定量对比：你的工具 vs 传统固定快照ROM，以电池热管理为核心案例，三类算例下精度/加速比/失效预警能力对比；**误差组分归因实验**（方向②）：哪个工况下哪种误差组分主导（截断/时间/参数） | 对比实验数据表+图表+组分归因报告 | ☐ |
 | 25 | 明确刻画局限性：不支持强非线性、激波、双曲系统；误差估计为上界近似；Future Work提污染物扩散应急预测 | 局限性章节（论文用） | ☐ |

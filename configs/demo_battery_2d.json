@@ -14,5 +14,6 @@
     ],
     "validate_against_fom": true
   },
+  "error_monitor": {"estimator": "placeholder"},
   "output": {"prefix": "demo_battery_2d"}
 }

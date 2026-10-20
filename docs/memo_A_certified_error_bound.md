@@ -20,6 +20,8 @@ $$\|\mathbf{T}(\mu) - V\mathbf{a}(\mu)\|_X \;\le\; \Delta(\mu) \;=\; \frac{\|r(\
 
 **关键性质：计算 $\Delta(\mu)$ 完全不需要全阶解**——这就是"运行时、不依赖对照"的严格版本，比启发式残差监控高一个理论层级。
 
+> 📌 **2026-10-20 更新**：代码接口已冻结，见 `docs/interface_certified_bound.md`（签名、字段约定、占位实现踩过的三个坑、交付 DoD）。实现前必读。
+
 ## 2. 你的交付验证标准：effectivity
 
 $$\eta(\mu) = \frac{\Delta(\mu)}{\|\mathbf{T}(\mu) - V\mathbf{a}(\mu)\|_X} \;\ge\; 1 \quad(\text{必须恒成立！})$$

@@ -2,10 +2,12 @@
 端到端流水线编排器（任务 #22 雏形）
 ====================================
 配置驱动：JSON 配置 → 快照采集（LHS/显式列表）→ POD → 仿射装配 →
-在线求解 → 可选全阶验证 → 报告输出。
+在线求解 → 可选全阶验证 → 可选认证误差界（任务 #14 挂载点）→ 报告输出。
 
 框架不认识具体 PDE：算例通过 CASE_REGISTRY 注册（架构文档 §2 目标 G1），
 新增算例 = 实现 FOMSolver 协议 + 注册一行。
+误差估计器通过 ESTIMATOR_REGISTRY 注册（src/rom/estimators.py，接口已冻结），
+配置里写 "error_monitor": {"estimator": "placeholder"} 即启用。
 
 用法:
     from src.pipeline.runner import run_pipeline
@@ -21,6 +23,7 @@ from typing import Any, Callable
 import numpy as np
 from scipy.stats import qmc
 
+from ..rom.estimators import ESTIMATOR_REGISTRY, BoundContext
 from ..rom.pod import PODDecomposer
 from ..rom.reduced import ReducedModelBuilder, ROMSolver, solve_steady
 from ..rom.snapshot import SnapshotManager
@@ -118,6 +121,15 @@ def run_pipeline(config: dict) -> dict:
     online_cfg = config.get("online", {})
     report: dict = {"case": case_name, "config": config}
 
+    # ---------------- 误差界估计器（任务 #14 挂载点） ----------------
+    est_name = config.get("error_monitor", {}).get("estimator")
+    estimator = None
+    if est_name is not None:
+        if est_name not in ESTIMATOR_REGISTRY:
+            raise ValueError(
+                f"未知估计器 {est_name!r}，已注册: {list(ESTIMATOR_REGISTRY)}")
+        estimator = ESTIMATOR_REGISTRY[est_name]
+
     # ---------------- 离线 ----------------
     t0 = time.perf_counter()
     base_params = spec.make_params(fom_ov)
@@ -148,8 +160,8 @@ def run_pipeline(config: dict) -> dict:
         entry: dict = {"params": mu_full}
 
         t0 = time.perf_counter()
+        T0 = spec.make_initial(p) if spec.kind == "time" else None
         if spec.kind == "time":
-            T0 = spec.make_initial(p)
             rom = ROMSolver(dt=p.dt, t_end=p.t_end).solve(
                 model, mu_full, T0, full_ops=ops)
             u_rom, t_rom = rom.snapshots, rom.t
@@ -166,6 +178,19 @@ def run_pipeline(config: dict) -> dict:
             den = np.linalg.norm(S_fom - basis.mean[:, None])
             entry["rel_error"] = float(num / den)
             entry["speedup"] = entry["fom_time_s"] / max(entry["rom_time_s"], 1e-9)
+
+        if estimator is not None:
+            ctx = BoundContext(full_ops=ops, kind=spec.kind, T0=T0,
+                               dt=getattr(p, "dt", None),
+                               t_end=getattr(p, "t_end", None))
+            bres = estimator(model, mu_full, ctx)
+            entry["error_bound"] = bres.to_dict()
+            if "rel_error" in entry and entry["rel_error"] > 0:
+                eta = bres.delta / entry["rel_error"]
+                entry["error_bound"]["effectivity"] = eta
+                if bres.certified and eta < 1.0:
+                    entry["error_bound"]["warning"] = (
+                        "η<1：认证界被真实误差击穿，实现有 bug（memo §2）")
         results.append(entry)
     report["online"] = results
 
